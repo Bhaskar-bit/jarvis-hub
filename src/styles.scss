@@ -1,0 +1,52 @@
+:root {
+  --page-bg: #f8fafc;
+  --card-bg: #ffffff;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --text-faint: #94a3b8;
+  --input-bg: #f1f5f9;
+  --code-bg: #f8fafc;
+  --shadow: 0 1px 3px rgba(15, 23, 42, .06);
+  --shadow-hover: 0 4px 12px rgba(15, 23, 42, .10);
+  --amber: #B45309;
+}
+
+body.dark {
+  --page-bg: #0b1220;
+  --card-bg: #111a2e;
+  --border: #1f2a44;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+  --input-bg: #1a2540;
+  --code-bg: #0b1220;
+  --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  --shadow-hover: 0 4px 12px rgba(0, 0, 0, .5);
+  --amber: #f59e0b;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--page-bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  transition: background .15s, color .15s;
+}
+
+input, select, button, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+input:focus, select:focus, button:focus, textarea:focus { outline: 2px solid var(--amber); outline-offset: 1px; }
+
+a { color: var(--amber); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }

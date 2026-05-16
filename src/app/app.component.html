@@ -1,0 +1,29 @@
+<app-top-bar></app-top-bar>
+
+<main *ngIf="svc.activeView() === 'agents'">
+  <app-agent-group
+    *ngFor="let g of svc.getGroupsForFiltered()"
+    [group]="g"
+    [agents]="svc.getAgentsForGroup(g.name)">
+  </app-agent-group>
+
+  <p *ngIf="svc.filteredAgents().length === 0" class="empty-state">
+    No agents match the current filter.
+  </p>
+
+  <section class="recent" *ngIf="recentRuns().length > 0">
+    <h3>Recent activity</h3>
+    <ul>
+      <li *ngFor="let r of recentRuns()">
+        <strong>{{ r.name }}</strong>
+        <span class="muted">— {{ r.group }}</span>
+      </li>
+    </ul>
+  </section>
+</main>
+
+<app-jarvis-dashboard *ngIf="svc.activeView() === 'jarvis'"></app-jarvis-dashboard>
+
+<footer class="foot">
+  Launch any agent with its <code>/trigger</code> in Claude Code.
+</footer>
