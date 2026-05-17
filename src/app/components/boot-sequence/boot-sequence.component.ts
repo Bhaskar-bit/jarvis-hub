@@ -10,36 +10,37 @@ import { CommonModule } from '@angular/common';
     <div class="boot__core">
       <svg viewBox="0 0 200 200" class="reactor">
         <defs>
-          <radialGradient id="rg" cx="50%" cy="50%" r="50%">
-            <stop offset="0%"   stop-color="#67e8f9" stop-opacity="1"/>
-            <stop offset="50%"  stop-color="#22d3ee" stop-opacity=".6"/>
-            <stop offset="100%" stop-color="#0891b2" stop-opacity="0"/>
+          <radialGradient id="rg-l" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stop-color="#fff" stop-opacity="1"/>
+            <stop offset="60%"  stop-color="#14b8a6" stop-opacity=".55"/>
+            <stop offset="100%" stop-color="#0f766e" stop-opacity="0"/>
           </radialGradient>
         </defs>
-        <circle cx="100" cy="100" r="22" fill="url(#rg)" class="reactor__core"/>
-        <circle cx="100" cy="100" r="34" fill="none" stroke="#22d3ee" stroke-width="1" stroke-dasharray="3 5" class="reactor__r1"/>
-        <circle cx="100" cy="100" r="52" fill="none" stroke="#22d3ee" stroke-width="1" stroke-dasharray="8 12" opacity=".7" class="reactor__r2"/>
-        <circle cx="100" cy="100" r="72" fill="none" stroke="#22d3ee" stroke-width="0.5" stroke-dasharray="2 22" opacity=".5" class="reactor__r3"/>
-        <circle cx="100" cy="100" r="90" fill="none" stroke="#22d3ee" stroke-width="0.5" opacity=".25"/>
-        <g class="reactor__ticks">
-          <line x1="100" y1="6"   x2="100" y2="16"  stroke="#22d3ee" stroke-width="1.5"/>
-          <line x1="100" y1="184" x2="100" y2="194" stroke="#22d3ee" stroke-width="1.5"/>
-          <line x1="6"   y1="100" x2="16"  y2="100" stroke="#22d3ee" stroke-width="1.5"/>
-          <line x1="184" y1="100" x2="194" y2="100" stroke="#22d3ee" stroke-width="1.5"/>
-        </g>
+        <circle cx="100" cy="100" r="18" fill="url(#rg-l)" class="reactor__core"/>
+        <circle cx="100" cy="100" r="44" fill="none" stroke="#0f766e" stroke-width="0.6"
+                stroke-dasharray="180 360"
+                stroke-dashoffset="270"
+                class="reactor__r1"/>
+        <circle cx="100" cy="100" r="68" fill="none" stroke="#b45309" stroke-width="0.5"
+                opacity=".55"
+                stroke-dasharray="40 320"
+                class="reactor__r2"/>
+        <circle cx="100" cy="100" r="92" fill="none" stroke="#0f766e" stroke-width="0.3" opacity=".18"/>
       </svg>
 
-      <div class="boot__text arc-title">
-        <span class="boot__line" *ngFor="let l of visibleLines(); let i = index">
-          <span class="boot__cursor" *ngIf="i === visibleLines().length - 1">›</span>
-          {{ l }}
-        </span>
+      <div class="boot__name">
+        <span class="arc-title boot__brand">ARC-OS</span>
+        <span class="boot__sep"></span>
+        <span class="arc-mono boot__sub">JARVIS AGENT CONSOLE</span>
       </div>
 
-      <div class="boot__bar">
-        <span [style.width.%]="progress()"></span>
+      <div class="boot__status arc-mono">
+        <span>{{ statusLine() }}</span>
       </div>
-      <div class="boot__hint">CLICK TO SKIP</div>
+
+      <div class="boot__bar"><span [style.width.%]="progress()"></span></div>
+
+      <div class="boot__hint arc-mono">CLICK ANYWHERE TO SKIP</div>
     </div>
   </div>
   `,
@@ -47,63 +48,79 @@ import { CommonModule } from '@angular/common';
     .boot {
       position: fixed;
       inset: 0;
-      background:
-        radial-gradient(ellipse at center, rgba(34,211,238,.08), transparent 60%),
-        #03060e;
+      background: #0a1020;
       display: grid;
       place-items: center;
       z-index: 9999;
       cursor: pointer;
-      transition: opacity .5s ease, transform .5s ease;
+      transition: opacity .9s ease;
     }
-    .boot--exit { opacity: 0; transform: scale(1.04); pointer-events: none; }
-    .boot__core { display: flex; flex-direction: column; align-items: center; gap: 18px; }
-    .reactor { width: 220px; height: 220px; filter: drop-shadow(0 0 18px rgba(34,211,238,.55)); }
-    .reactor__core { animation: core-pulse 1.4s ease-in-out infinite; transform-origin: center; }
-    .reactor__r1 { transform-origin: center; animation: spin 6s linear infinite; }
-    .reactor__r2 { transform-origin: center; animation: spin-rev 12s linear infinite; }
-    .reactor__r3 { transform-origin: center; animation: spin 24s linear infinite; }
+    .boot::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at center, rgba(45,212,191,.08), transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(217,119,6,.05), transparent 50%);
+    }
+    .boot--exit { opacity: 0; pointer-events: none; }
+
+    .boot__core {
+      display: flex; flex-direction: column; align-items: center; gap: 22px;
+      animation: rise .8s cubic-bezier(.16,.84,.44,1);
+    }
+    @keyframes rise { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; } }
+
+    .reactor { width: 200px; height: 200px; }
+    .reactor__core { animation: core-glow 3.5s ease-in-out infinite; transform-origin: center; }
+    .reactor__r1   { transform-origin: center; animation: spin 14s linear infinite; }
+    .reactor__r2   { transform-origin: center; animation: spin-rev 22s linear infinite; }
     @keyframes spin       { to { transform: rotate(360deg); } }
     @keyframes spin-rev   { to { transform: rotate(-360deg); } }
-    @keyframes core-pulse {
-      0%, 100% { opacity: 1;  transform: scale(1); }
-      50%      { opacity: .7; transform: scale(.92); }
+    @keyframes core-glow {
+      0%, 100% { opacity: .85; transform: scale(1); }
+      50%      { opacity: 1;   transform: scale(1.04); }
     }
-    .boot__text {
-      font-family: 'Orbitron', monospace;
-      font-size: 12px;
-      letter-spacing: 3px;
-      color: #67e8f9;
-      text-align: center;
-      text-shadow: 0 0 12px rgba(34,211,238,.55);
-      min-height: 80px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+
+    .boot__name {
+      display: flex; align-items: center; gap: 14px;
+      color: #e6ebf4;
     }
-    .boot__line { display: block; opacity: 0; animation: line-in .25s ease forwards; }
-    @keyframes line-in { to { opacity: 1; } }
-    .boot__cursor { color: #f59e0b; margin-right: 4px; animation: blink 1s steps(1) infinite; }
-    @keyframes blink { 50% { opacity: 0; } }
+    .boot__brand { font-size: 20px; letter-spacing: 8px; color: #fff; }
+    .boot__sep   { width: 1px; height: 14px; background: rgba(230,235,244,.3); }
+    .boot__sub   { font-size: 10px; letter-spacing: 2.5px; color: #98a4ba; }
+
+    .boot__status {
+      min-height: 16px;
+      font-size: 10px;
+      letter-spacing: 2.5px;
+      color: #5eead4;
+      text-transform: uppercase;
+    }
+
     .boot__bar {
-      width: 260px;
-      height: 2px;
-      background: rgba(34,211,238,.15);
+      width: 280px;
+      height: 1px;
+      background: rgba(230,235,244,.1);
       overflow: hidden;
     }
     .boot__bar span {
       display: block;
       height: 100%;
-      background: linear-gradient(90deg, #22d3ee, #f59e0b);
-      box-shadow: 0 0 10px #22d3ee;
-      transition: width .12s linear;
+      background: #5eead4;
+      transition: width .15s linear;
     }
+
     .boot__hint {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      color: #4a6585;
-      letter-spacing: 2px;
-      margin-top: 4px;
+      font-size: 8px;
+      letter-spacing: 3px;
+      color: #5d6b85;
+      margin-top: 8px;
+      animation: fade-blink 2.4s ease-in-out infinite;
+    }
+    @keyframes fade-blink {
+      0%, 100% { opacity: .4; }
+      50%      { opacity: 1; }
     }
   `]
 })
@@ -112,28 +129,30 @@ export class BootSequenceComponent implements OnInit {
 
   exiting = signal(false);
   progress = signal(0);
-  visibleLines = signal<string[]>([]);
+  statusLine = signal('');
 
-  private readonly lines = [
-    'INIT ARC-OS CORE',
-    'LINKING AGENT MESH …',
-    'SYSTEMS ONLINE'
+  private readonly steps = [
+    { at: 0,    label: 'INITIALISING CORE' },
+    { at: 0.30, label: 'LINKING AGENT MESH' },
+    { at: 0.65, label: 'SYNCHRONISING TELEMETRY' },
+    { at: 0.92, label: 'SYSTEMS ONLINE' }
   ];
   private timers: number[] = [];
   private finished = false;
 
   ngOnInit(): void {
-    this.timers.push(window.setTimeout(() => this.visibleLines.set([this.lines[0]]), 120));
-    this.timers.push(window.setTimeout(() => this.visibleLines.set(this.lines.slice(0, 2)), 520));
-    this.timers.push(window.setTimeout(() => this.visibleLines.set(this.lines), 900));
-
+    const TOTAL = 2200;
     const start = performance.now();
-    const total = 1250;
+
+    this.statusLine.set(this.steps[0].label);
+
     const tick = (t: number) => {
-      const p = Math.min(100, ((t - start) / total) * 100);
-      this.progress.set(p);
-      if (p < 100 && !this.finished) requestAnimationFrame(tick);
-      else if (!this.finished) this.finish();
+      const p = Math.min(1, (t - start) / TOTAL);
+      this.progress.set(p * 100);
+      const cur = [...this.steps].reverse().find(s => p >= s.at);
+      if (cur) this.statusLine.set(cur.label);
+      if (p < 1 && !this.finished) requestAnimationFrame(tick);
+      else if (!this.finished) this.timers.push(window.setTimeout(() => this.finish(), 350));
     };
     requestAnimationFrame(tick);
   }
@@ -145,6 +164,6 @@ export class BootSequenceComponent implements OnInit {
     this.finished = true;
     this.timers.forEach(t => clearTimeout(t));
     this.exiting.set(true);
-    setTimeout(() => this.done.emit(), 480);
+    setTimeout(() => this.done.emit(), 900);
   }
 }

@@ -1,9 +1,7 @@
 <!-- Boot sequence -->
 <app-boot-sequence *ngIf="!booted()" (done)="onBootDone()"></app-boot-sequence>
 
-<!-- Atmospheric layers -->
-<div class="arc-grid"
-     [style.transform]="'translate(' + parallaxX() + 'px,' + parallaxY() + 'px)'"></div>
+<!-- Cinematic letterbox -->
 <div class="arc-letterbox arc-letterbox--top"></div>
 <div class="arc-letterbox arc-letterbox--bottom"></div>
 
@@ -19,20 +17,20 @@
     </app-agent-group>
 
     <p *ngIf="svc.filteredAgents().length === 0" class="empty arc-title">
-      ✗ NO AGENTS · CHECK FILTERS
+      No agents match the current filter
     </p>
 
     <section class="recent" *ngIf="recentRuns().length > 0">
       <header class="recent__hdr">
         <span class="recent__bar"></span>
-        <h3 class="arc-title">RECENT TELEMETRY</h3>
+        <h3 class="arc-title">Recent activity</h3>
         <span class="recent__line"></span>
       </header>
       <ul>
         <li *ngFor="let r of recentRuns()">
           <span class="dot"></span>
           <strong>{{ r.name }}</strong>
-          <span class="muted arc-mono">{{ r.group.toUpperCase() }}</span>
+          <span class="muted arc-mono">{{ r.group }}</span>
         </li>
       </ul>
     </section>
@@ -41,7 +39,8 @@
   <app-jarvis-dashboard *ngIf="svc.activeView() === 'jarvis'"></app-jarvis-dashboard>
 
   <footer class="foot arc-mono">
-    <span class="dot dot--green"></span>
-    ARC-OS · TYPE <code>/trigger</code> IN CLAUDE CODE TO LAUNCH ANY AGENT
+    <span>ARC-OS</span>
+    <span class="foot__sep"></span>
+    <span>Launch agents with <code>/trigger</code> in Claude Code</span>
   </footer>
 </ng-container>

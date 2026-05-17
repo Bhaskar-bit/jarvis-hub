@@ -1,4 +1,4 @@
-import { Component, HostListener, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AgentsService } from './services/agents.service';
 import { TopBarComponent } from './components/top-bar/top-bar.component';
@@ -17,8 +17,6 @@ export class AppComponent {
   svc = inject(AgentsService);
 
   booted = signal(false);
-  parallaxX = signal(0);
-  parallaxY = signal(0);
 
   recentRuns = computed(() => {
     const map = new Map<string, number>();
@@ -44,13 +42,5 @@ export class AppComponent {
   onBootDone(): void {
     this.booted.set(true);
     sessionStorage.setItem('arc-booted', '1');
-  }
-
-  @HostListener('window:mousemove', ['$event'])
-  onMouseMove(e: MouseEvent): void {
-    const x = (e.clientX / window.innerWidth - 0.5) * 8;
-    const y = (e.clientY / window.innerHeight - 0.5) * 8;
-    this.parallaxX.set(x);
-    this.parallaxY.set(y);
   }
 }

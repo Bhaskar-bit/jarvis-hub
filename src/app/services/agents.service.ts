@@ -286,7 +286,7 @@ export class AgentsService {
 
   constructor() {
     this.loadPersistedData();
-    if (this.theme() === 'dark') document.body.classList.add('dark');
+    document.body.classList.toggle('eclipse', this.theme() === 'dark');
   }
 
   getGroup(name: string): AgentGroup | undefined {
@@ -344,7 +344,7 @@ export class AgentsService {
   toggleTheme(): void {
     const next: Theme = this.theme() === 'light' ? 'dark' : 'light';
     this.theme.set(next);
-    document.body.classList.toggle('dark', next === 'dark');
+    document.body.classList.toggle('eclipse', next === 'dark');
     this.persist();
   }
 
