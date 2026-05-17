@@ -9,282 +9,505 @@ import { InvocationLog, LogForm } from '../../models/agent.model';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-  <div class="dash">
-    <!-- Command bar -->
-    <div class="cmdbar">
-      <label>Sprint
-        <select [ngModel]="svc.currentSprint()"
-                (ngModelChange)="svc.currentSprint.set($event); svc.persist()"
-                data-testid="sprint-select">
-          <option *ngFor="let s of sprints">{{ s }}</option>
-        </select>
-      </label>
-      <label>You are
-        <select [ngModel]="svc.currentUser()"
-                (ngModelChange)="svc.currentUser.set($event); svc.persist()">
-          <option *ngFor="let u of users">{{ u }}</option>
-        </select>
-      </label>
-      <label>Team size
-        <input type="number" min="1" max="100"
-               [ngModel]="svc.teamSize()"
-               (ngModelChange)="svc.teamSize.set(+$event); svc.persist()" />
-      </label>
-      <button class="btn btn--ghost" (click)="pisOpen.set(true)" data-testid="pis-btn">🧠 Update PIS</button>
-    </div>
+  <div class="bridge arc-stagger">
 
-    <!-- Hero metrics -->
-    <div class="hero">
-      <div class="hero__card">
-        <div class="hero__label">This Week</div>
-        <div class="hero__num">{{ svc.weeklyInvocations() }}</div>
-        <div class="hero__sub">invocations</div>
+    <!-- HEADER STRIP -->
+    <header class="bridge__hdr">
+      <div class="bridge__id">
+        <span class="arc-title bridge__id-name">COMMAND BRIDGE</span>
+        <span class="arc-mono bridge__id-meta">SECTOR / {{ svc.currentSprint() }} · OPS {{ svc.currentUser() }}</span>
       </div>
-      <div class="hero__card">
-        <div class="hero__label">Time Saved</div>
-        <div class="hero__num">{{ svc.totalTimeSavedHours() }}</div>
-        <div class="hero__sub">hours total</div>
+      <div class="bridge__cmd">
+        <label class="cmd-field">
+          <span>SPRINT</span>
+          <select class="arc-input"
+                  [ngModel]="svc.currentSprint()"
+                  (ngModelChange)="svc.currentSprint.set($event); svc.persist()"
+                  data-testid="sprint-select">
+            <option *ngFor="let s of sprints">{{ s }}</option>
+          </select>
+        </label>
+        <label class="cmd-field">
+          <span>OPERATOR</span>
+          <select class="arc-input"
+                  [ngModel]="svc.currentUser()"
+                  (ngModelChange)="svc.currentUser.set($event); svc.persist()">
+            <option *ngFor="let u of users">{{ u }}</option>
+          </select>
+        </label>
+        <label class="cmd-field cmd-field--sm">
+          <span>SQUAD</span>
+          <input class="arc-input" type="number" min="1" max="100"
+                 [ngModel]="svc.teamSize()"
+                 (ngModelChange)="svc.teamSize.set(+$event); svc.persist()"/>
+        </label>
+        <button class="arc-btn arc-btn--sm" (click)="pisOpen.set(true)" data-testid="pis-btn">⌬ PIS SYNC</button>
+        <button class="arc-btn arc-btn--sm arc-btn--amber" (click)="svc.exportDigest()" data-testid="export-btn">▼ EXPORT</button>
       </div>
-      <div class="hero__card">
-        <div class="hero__label">Issues Prevented</div>
-        <div class="hero__num">{{ svc.totalPrevented() }}</div>
-        <div class="hero__sub">actioned findings</div>
-      </div>
-      <div class="hero__card">
-        <div class="hero__label">Team Adoption</div>
-        <div class="hero__num">{{ svc.adoptionRate() }}<span class="hero__pct">%</span></div>
-        <div class="hero__sub">{{ svc.activeUsers() }} / {{ svc.teamSize() }} active 7d</div>
-      </div>
-      <div class="hero__card">
-        <div class="hero__label">Total Invocations</div>
-        <div class="hero__num">{{ svc.totalInvocations() }}</div>
-        <div class="hero__sub">all time</div>
-      </div>
-    </div>
+    </header>
 
-    <!-- 3-col grid -->
-    <div class="grid">
-      <!-- Col 1 — rankings -->
-      <section class="panel">
-        <h3 class="panel__title">🏆 Agent Rankings</h3>
-        <div class="rank" *ngFor="let r of rankings(); let i = index">
-          <span class="rank__pos">{{ i + 1 }}</span>
-          <div class="rank__body">
-            <div class="rank__name">{{ r.name }}</div>
-            <div class="rank__meta">
-              <span class="dom-dot" [style.background]="r.accent"></span>
-              {{ r.domain }}
+    <!-- HERO GAUGES -->
+    <section class="gauges arc-stagger">
+      <div class="gauge arc-frame--4" *ngFor="let g of gauges()">
+        <span class="arc-frame-corner"></span><span class="arc-frame-corner"></span>
+        <span class="arc-frame-corner"></span><span class="arc-frame-corner"></span>
+
+        <svg viewBox="0 0 120 80" class="gauge__svg">
+          <path d="M 12 70 A 48 48 0 0 1 108 70" fill="none" stroke="rgba(34,211,238,.12)" stroke-width="6" stroke-linecap="round"/>
+          <path d="M 12 70 A 48 48 0 0 1 108 70" fill="none"
+                [attr.stroke]="g.color"
+                stroke-width="6" stroke-linecap="round"
+                stroke-dasharray="150"
+                [attr.stroke-dashoffset]="150 - (150 * g.pct / 100)"
+                style="transition: stroke-dashoffset .8s cubic-bezier(.2,.7,.2,1); filter: drop-shadow(0 0 6px currentColor);"/>
+          <text x="60" y="56" text-anchor="middle" class="gauge__num arc-mono"
+                [attr.fill]="g.color">{{ g.value }}</text>
+          <text x="60" y="72" text-anchor="middle" class="gauge__unit">{{ g.unit }}</text>
+        </svg>
+
+        <div class="gauge__lbl arc-title">{{ g.label }}</div>
+        <div class="gauge__sub arc-mono">{{ g.sub }}</div>
+      </div>
+    </section>
+
+    <!-- 3-COL GRID -->
+    <section class="grid">
+
+      <!-- RANKINGS -->
+      <article class="arc-panel arc-frame--4 panel">
+        <span class="arc-frame-corner"></span><span class="arc-frame-corner"></span>
+        <span class="arc-frame-corner"></span><span class="arc-frame-corner"></span>
+        <div class="arc-panel__title">⚙ AGENT RANKINGS · TOP 10</div>
+        <div class="panel__body">
+          <div class="rank arc-stagger">
+            <div class="rank__row" *ngFor="let r of rankings(); let i = index">
+              <span class="rank__pos arc-mono">#{{ (i + 1).toString().padStart(2, '0') }}</span>
+              <span class="rank__dot" [style.background]="r.accent" [style.box-shadow]="'0 0 8px ' + r.accent"></span>
+              <div class="rank__body">
+                <div class="rank__name">{{ r.name }}</div>
+                <div class="rank__meta arc-mono">{{ r.domain }} · {{ r.runs }} OPS · {{ r.timeHr }}H SAVED</div>
+                <div class="rank__bar">
+                  <span [style.width.%]="r.healthPct" [style.background]="r.accent"></span>
+                </div>
+              </div>
+              <span class="rank__score arc-data">{{ r.healthPct }}</span>
             </div>
-            <div class="rank__bar"><span [style.width.%]="r.healthPct" [style.background]="r.accent"></span></div>
           </div>
-          <div class="rank__chips">
-            <span class="chip">▶ {{ r.runs }}</span>
-            <span class="chip">⏱ {{ r.timeHr }}h</span>
-            <span class="chip chip--score">{{ r.healthPct }}</span>
-          </div>
+          <p *ngIf="rankings().length === 0" class="empty">NO TELEMETRY · LOG AN OPERATION</p>
         </div>
-        <p *ngIf="rankings().length === 0" class="empty">No invocations yet — click <strong>+ Log Usage</strong>.</p>
-      </section>
+      </article>
 
-      <!-- Col 2 — team + PIS -->
-      <section class="panel">
-        <h3 class="panel__title">👥 Team Adoption</h3>
-        <div class="member" *ngFor="let m of svc.teamStats()">
-          <div class="member__name">{{ m.user }}</div>
-          <div class="member__meta">
-            <span class="chip">▶ {{ m.runs }}</span>
-            <span class="chip">⚙ {{ m.uniqueAgents }} agents</span>
-            <span class="chip">⏱ {{ (m.timeSavedMin / 60).toFixed(1) }}h</span>
+      <!-- TEAM + PIS -->
+      <article class="arc-panel arc-frame--4 panel">
+        <span class="arc-frame-corner"></span><span class="arc-frame-corner"></span>
+        <span class="arc-frame-corner"></span><span class="arc-frame-corner"></span>
+        <div class="arc-panel__title">⌥ SQUAD ADOPTION</div>
+        <div class="panel__body">
+          <div class="member" *ngFor="let m of svc.teamStats()">
+            <div class="member__row">
+              <span class="member__name">{{ m.user }}</span>
+              <span class="arc-data">{{ m.runs }} OPS</span>
+            </div>
+            <div class="member__row member__row--meta">
+              <span class="arc-mono">{{ m.uniqueAgents }} agents · {{ (m.timeSavedMin / 60).toFixed(1) }}h</span>
+              <span class="arc-data">{{ m.breadth }}%</span>
+            </div>
+            <div class="member__bar"><span [style.width.%]="m.breadth"></span></div>
           </div>
-          <div class="member__bar"><span [style.width.%]="m.breadth"></span></div>
+          <p *ngIf="svc.teamStats().length === 0" class="empty">NO SQUAD ACTIVITY</p>
         </div>
-        <p *ngIf="svc.teamStats().length === 0" class="empty">No team activity yet.</p>
 
-        <h3 class="panel__title panel__title--mt">🧠 PIS State</h3>
-        <div class="pis">
-          <div class="pis__row">
-            <strong>{{ svc.pisState().projectName }}</strong>
-            <span class="chip">{{ svc.pisState().version }}</span>
-          </div>
-          <div class="pis__bar">
-            <span [style.width.%]="svc.pisState().progressToV1"></span>
-          </div>
-          <div class="pis__meta">
-            {{ svc.pisState().progressToV1 }}% to v1.0 ·
-            {{ svc.pisState().sessionsLogged }} sessions
-          </div>
-          <div class="pis__area" *ngFor="let a of svc.pisState().areas">
-            <span class="pis__area-name">{{ a.name }}</span>
-            <div class="pis__area-bar"><span [style.width.%]="a.maturity"></span></div>
-            <span class="pis__area-pct">{{ a.maturity }}%</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Col 3 — ROI + feed -->
-      <section class="panel">
-        <h3 class="panel__title">💰 Sprint ROI — {{ svc.currentSprint() }}</h3>
-        <div class="roi">
-          <div class="roi__cell">
-            <div class="roi__num">{{ svc.sprintMetrics().timeSavedHours }}h</div>
-            <div class="roi__lbl">time saved</div>
-          </div>
-          <div class="roi__cell">
-            <div class="roi__num">{{ svc.sprintMetrics().prevented }}</div>
-            <div class="roi__lbl">issues prevented</div>
-          </div>
-          <div class="roi__cell">
-            <div class="roi__num">{{ svc.sprintMetrics().actionRate }}%</div>
-            <div class="roi__lbl">action rate</div>
-          </div>
-          <div class="roi__cell roi__cell--full">
-            <div class="roi__lbl">Cumulative (all time)</div>
-            <div class="roi__sub">
-              {{ svc.totalInvocations() }} runs · {{ svc.totalTimeSavedHours() }}h saved ·
-              {{ svc.totalPrevented() }} prevented
+        <div class="arc-panel__title arc-panel__title--mt">◉ PERSONAL INTEL SYSTEM</div>
+        <div class="panel__body">
+          <div class="pis">
+            <div class="pis__title">
+              <span class="arc-glow-text">{{ svc.pisState().projectName }}</span>
+              <span class="arc-chip arc-chip--amber">{{ svc.pisState().version }}</span>
+            </div>
+            <div class="pis__progress">
+              <div class="pis__bar"><span [style.width.%]="svc.pisState().progressToV1"></span></div>
+              <div class="pis__meta arc-mono">
+                {{ svc.pisState().progressToV1 }}% → V1.0 · {{ svc.pisState().sessionsLogged }} SESSIONS
+              </div>
+            </div>
+            <div class="pis__area" *ngFor="let a of svc.pisState().areas">
+              <span class="pis__area-name arc-mono">{{ a.name }}</span>
+              <div class="pis__area-bar"><span [style.width.%]="a.maturity"></span></div>
+              <span class="pis__area-pct arc-data">{{ a.maturity }}</span>
             </div>
           </div>
         </div>
+      </article>
 
-        <h3 class="panel__title panel__title--mt">📡 Live Feed</h3>
-        <div class="feed" *ngFor="let l of recentFeed()">
-          <span class="dom-dot" [style.background]="l.accent"></span>
-          <div class="feed__body">
-            <div class="feed__name">{{ l.agentName }}</div>
-            <div class="feed__meta">
-              {{ l.user }} · {{ relTime(l.timestamp) }}
+      <!-- ROI RADAR + FEED -->
+      <article class="arc-panel arc-frame--4 panel">
+        <span class="arc-frame-corner"></span><span class="arc-frame-corner"></span>
+        <span class="arc-frame-corner"></span><span class="arc-frame-corner"></span>
+        <div class="arc-panel__title">▲ SPRINT ROI · {{ svc.currentSprint() }}</div>
+        <div class="panel__body">
+          <div class="roi-wrap">
+            <svg viewBox="0 0 240 200" class="radar">
+              <!-- grid rings -->
+              <polygon *ngFor="let r of radarRings"
+                       [attr.points]="radarPoints(r)"
+                       fill="none" stroke="rgba(34,211,238,.18)" stroke-width="0.8"/>
+              <!-- axes -->
+              <line *ngFor="let p of radarPoints(1).split(' '); let i = index"
+                    x1="120" y1="100"
+                    [attr.x2]="p.split(',')[0]"
+                    [attr.y2]="p.split(',')[1]"
+                    stroke="rgba(34,211,238,.18)" stroke-width="0.8"/>
+              <!-- data polygon -->
+              <polygon [attr.points]="radarDataPoints()"
+                       fill="rgba(34,211,238,.22)"
+                       stroke="#22d3ee" stroke-width="1.5"
+                       style="filter: drop-shadow(0 0 8px #22d3ee);"/>
+              <!-- vertex dots -->
+              <circle *ngFor="let pt of radarDataVertices()"
+                      [attr.cx]="pt.x" [attr.cy]="pt.y" r="3"
+                      fill="#f59e0b" style="filter: drop-shadow(0 0 6px #f59e0b);"/>
+              <!-- axis labels -->
+              <text *ngFor="let l of radarLabels(); let i = index"
+                    [attr.x]="l.x" [attr.y]="l.y"
+                    text-anchor="middle" class="radar__lbl">{{ l.text }}</text>
+            </svg>
+            <div class="roi-meta arc-stagger">
+              <div class="roi-meta__cell">
+                <div class="arc-data roi-meta__num">{{ svc.sprintMetrics().timeSavedHours }}H</div>
+                <div class="roi-meta__lbl arc-mono">TIME SAVED</div>
+              </div>
+              <div class="roi-meta__cell">
+                <div class="arc-data roi-meta__num">{{ svc.sprintMetrics().prevented }}</div>
+                <div class="roi-meta__lbl arc-mono">PREVENTED</div>
+              </div>
+              <div class="roi-meta__cell">
+                <div class="arc-data roi-meta__num">{{ svc.sprintMetrics().actionRate }}%</div>
+                <div class="roi-meta__lbl arc-mono">ACT RATE</div>
+              </div>
+              <div class="roi-meta__cell">
+                <div class="arc-data roi-meta__num">{{ svc.sprintMetrics().runs }}</div>
+                <div class="roi-meta__lbl arc-mono">OPS</div>
+              </div>
             </div>
           </div>
-          <span class="chip chip--mini">{{ l.outcome }}</span>
-          <span class="chip chip--mini">{{ l.actioned }}/{{ l.findingCount }}</span>
         </div>
-        <p *ngIf="recentFeed().length === 0" class="empty">No activity yet.</p>
-      </section>
+
+        <div class="arc-panel__title arc-panel__title--mt">⌷ LIVE FEED</div>
+        <div class="panel__body feed-body">
+          <div class="feed arc-stagger">
+            <div class="feed__row" *ngFor="let l of recentFeed()">
+              <span class="feed__dot" [style.background]="l.accent"
+                    [style.box-shadow]="'0 0 8px ' + l.accent"></span>
+              <div class="feed__main">
+                <div class="feed__name">{{ l.agentName }}</div>
+                <div class="feed__meta arc-mono">{{ l.user }} · {{ relTime(l.timestamp) }}</div>
+              </div>
+              <span class="arc-chip" [class]="outcomeChip(l.outcome)">{{ l.outcome }}</span>
+            </div>
+          </div>
+          <p *ngIf="recentFeed().length === 0" class="empty">NO ACTIVITY · STANDING BY</p>
+        </div>
+      </article>
+    </section>
+
+    <!-- TICKER -->
+    <div class="ticker" *ngIf="tickerText()">
+      <div class="ticker__track arc-mono">
+        <span>{{ tickerText() }}</span>
+        <span>{{ tickerText() }}</span>
+      </div>
     </div>
 
     <!-- FAB -->
-    <button class="fab" (click)="logOpen.set(true)" data-testid="fab-log">+ Log Usage</button>
+    <button class="fab arc-frame" (click)="logOpen.set(true)" data-testid="fab-log">
+      <span class="fab__plus">+</span>
+      <span class="fab__label arc-title">LOG OP</span>
+    </button>
 
-    <!-- Log modal -->
+    <!-- LOG MODAL -->
     <div class="modal" *ngIf="logOpen()" (click)="logOpen.set(false)">
-      <div class="modal__box" (click)="$event.stopPropagation()">
-        <h3>Log Invocation</h3>
-        <label>Agent
-          <select [(ngModel)]="form.agentId">
-            <option value="" disabled>Select…</option>
+      <div class="modal__box arc-frame--4" (click)="$event.stopPropagation()">
+        <span class="arc-frame-corner"></span><span class="arc-frame-corner"></span>
+        <span class="arc-frame-corner"></span><span class="arc-frame-corner"></span>
+        <h3 class="modal__title arc-title">▶ LOG OPERATION</h3>
+        <label class="cmd-field">
+          <span>AGENT</span>
+          <select class="arc-input" [(ngModel)]="form.agentId">
+            <option value="" disabled>· SELECT ·</option>
             <option *ngFor="let a of svc.agents()" [value]="a.id">{{ a.name }}</option>
           </select>
         </label>
-        <label>Outcome
-          <select [(ngModel)]="form.outcome">
-            <option value="success">Success — found & actionable</option>
-            <option value="partial">Partial — some value</option>
-            <option value="noissue">No issue — clean</option>
-            <option value="failed">Failed — no value</option>
+        <label class="cmd-field">
+          <span>OUTCOME</span>
+          <select class="arc-input" [(ngModel)]="form.outcome">
+            <option value="success">SUCCESS · actionable</option>
+            <option value="partial">PARTIAL · some value</option>
+            <option value="noissue">NO ISSUE · clean</option>
+            <option value="failed">FAILED · no value</option>
           </select>
         </label>
-        <div class="row">
-          <label>Findings <input type="number" min="0" [(ngModel)]="form.findingCount"/></label>
-          <label>Actioned <input type="number" min="0" [(ngModel)]="form.actioned"/></label>
-          <label>Dismissed <input type="number" min="0" [(ngModel)]="form.dismissed"/></label>
+        <div class="modal__row">
+          <label class="cmd-field"><span>FINDINGS</span><input class="arc-input" type="number" min="0" [(ngModel)]="form.findingCount"/></label>
+          <label class="cmd-field"><span>ACTIONED</span><input class="arc-input" type="number" min="0" [(ngModel)]="form.actioned"/></label>
+          <label class="cmd-field"><span>DISMISSED</span><input class="arc-input" type="number" min="0" [(ngModel)]="form.dismissed"/></label>
         </div>
-        <div class="row row--end">
-          <button class="btn btn--ghost" (click)="logOpen.set(false)">Cancel</button>
-          <button class="btn btn--primary" (click)="submitLog()" [disabled]="!form.agentId" data-testid="submit-log">
-            Log Invocation
+        <div class="modal__row modal__row--end">
+          <button class="arc-btn arc-btn--ghost arc-btn--sm" (click)="logOpen.set(false)">CANCEL</button>
+          <button class="arc-btn arc-btn--amber" (click)="submitLog()" [disabled]="!form.agentId" data-testid="submit-log">
+            ▶ COMMIT
           </button>
         </div>
       </div>
     </div>
 
-    <!-- PIS modal -->
+    <!-- PIS MODAL -->
     <div class="modal" *ngIf="pisOpen()" (click)="pisOpen.set(false)">
-      <div class="modal__box" (click)="$event.stopPropagation()">
-        <h3>Update PIS</h3>
-        <label>Project name <input [(ngModel)]="pisDraft.projectName" /></label>
-        <label>Version <input [(ngModel)]="pisDraft.version" /></label>
-        <label>Sessions logged <input type="number" min="0" [(ngModel)]="pisDraft.sessionsLogged" /></label>
-        <label>Progress to v1.0 (%) <input type="number" min="0" max="100" [(ngModel)]="pisDraft.progressToV1" /></label>
-        <div class="row row--end">
-          <button class="btn btn--ghost" (click)="pisOpen.set(false)">Cancel</button>
-          <button class="btn btn--primary" (click)="submitPis()">Save</button>
+      <div class="modal__box arc-frame--4" (click)="$event.stopPropagation()">
+        <span class="arc-frame-corner"></span><span class="arc-frame-corner"></span>
+        <span class="arc-frame-corner"></span><span class="arc-frame-corner"></span>
+        <h3 class="modal__title arc-title">⌬ PIS SYNC</h3>
+        <label class="cmd-field"><span>PROJECT</span><input class="arc-input" [(ngModel)]="pisDraft.projectName"/></label>
+        <label class="cmd-field"><span>VERSION</span><input class="arc-input" [(ngModel)]="pisDraft.version"/></label>
+        <label class="cmd-field"><span>SESSIONS LOGGED</span><input class="arc-input" type="number" min="0" [(ngModel)]="pisDraft.sessionsLogged"/></label>
+        <label class="cmd-field"><span>PROGRESS TO V1.0 (%)</span><input class="arc-input" type="number" min="0" max="100" [(ngModel)]="pisDraft.progressToV1"/></label>
+        <div class="modal__row modal__row--end">
+          <button class="arc-btn arc-btn--ghost arc-btn--sm" (click)="pisOpen.set(false)">CANCEL</button>
+          <button class="arc-btn" (click)="submitPis()">▶ SYNC</button>
         </div>
       </div>
     </div>
 
-    <!-- Toast -->
-    <div class="toast" *ngIf="toast()">{{ toast() }}</div>
+    <!-- TOAST -->
+    <div class="toast arc-frame" *ngIf="toast()">
+      <span class="toast__dot"></span>
+      <span class="arc-title">{{ toast() }}</span>
+    </div>
   </div>
   `,
   styles: [`
-    .dash { padding: 16px 20px 80px; display: flex; flex-direction: column; gap: 16px; }
-    .cmdbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
-    .cmdbar label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-    .cmdbar select, .cmdbar input { padding: 6px 10px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: inherit; min-width: 120px; }
-    .hero { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
-    .hero__card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; box-shadow: var(--shadow); }
-    .hero__label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 700; }
-    .hero__num { font-size: 30px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--text); line-height: 1.1; margin-top: 4px; }
-    .hero__pct { font-size: 18px; color: var(--text-muted); }
-    .hero__sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-    @media (max-width: 1100px) { .grid { grid-template-columns: 1fr; } .hero { grid-template-columns: repeat(2, 1fr); } }
-    .panel { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
-    .panel__title { margin: 0; font-size: 13px; font-weight: 700; color: var(--text); }
-    .panel__title--mt { margin-top: 8px; padding-top: 10px; border-top: 1px dashed var(--border); }
-    .rank { display: grid; grid-template-columns: 24px 1fr auto; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
-    .rank:last-child { border-bottom: 0; }
-    .rank__pos { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 13px; color: var(--text-muted); text-align: center; }
-    .rank__name { font-weight: 600; font-size: 13px; color: var(--text); }
-    .rank__meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); }
-    .dom-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-    .rank__bar { margin-top: 4px; background: var(--input-bg); height: 4px; border-radius: 2px; overflow: hidden; }
-    .rank__bar span { display: block; height: 100%; }
-    .rank__chips { display: flex; flex-direction: column; gap: 2px; align-items: end; }
-    .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; background: var(--input-bg); border-radius: 999px; font-size: 10px; color: var(--text-muted); font-weight: 600; }
-    .chip--mini { font-size: 9px; padding: 1px 5px; }
-    .chip--score { background: var(--text); color: var(--card-bg); }
-    .empty { font-size: 12px; color: var(--text-faint); margin: 8px 0; }
-    .member { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    :host { display: block; position: relative; z-index: 1; }
+
+    .bridge { padding: 24px 32px 100px; display: flex; flex-direction: column; gap: 22px; }
+
+    /* header */
+    .bridge__hdr {
+      display: flex; align-items: end; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .bridge__id-name { font-size: 22px; color: var(--cyan); text-shadow: 0 0 14px rgba(34,211,238,.4); display: block; }
+    .bridge__id-meta { font-size: 10px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; }
+    .bridge__cmd { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+    .cmd-field { display: flex; flex-direction: column; gap: 4px; }
+    .cmd-field span { font-family: 'Orbitron', monospace; font-size: 9px; letter-spacing: 2px; color: var(--text-dim); }
+    .cmd-field select, .cmd-field input { min-width: 120px; }
+    .cmd-field--sm select, .cmd-field--sm input { min-width: 70px; }
+
+    /* gauges */
+    .gauges { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+    .gauge {
+      background: linear-gradient(180deg, rgba(34,211,238,.04), transparent 60%), var(--panel);
+      border: 1px solid var(--line);
+      padding: 14px 12px 12px;
+      text-align: center;
+      backdrop-filter: blur(6px);
+    }
+    .gauge__svg { width: 100%; max-width: 140px; height: auto; display: block; margin: 0 auto; }
+    .gauge__num { font-size: 22px; font-weight: 700; }
+    .gauge__unit { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: var(--text-dim); letter-spacing: 1.5px; }
+    .gauge__lbl { font-size: 10px; color: var(--cyan); margin-top: 4px; }
+    .gauge__sub { font-size: 9px; color: var(--text-faint); letter-spacing: 1.5px; text-transform: uppercase; }
+
+    /* grid */
+    .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+    @media (max-width: 1200px) { .grid { grid-template-columns: 1fr; } .gauges { grid-template-columns: repeat(2, 1fr); } }
+
+    .panel { display: flex; flex-direction: column; }
+    .panel__body { padding: 12px 14px; }
+    .arc-panel__title--mt { margin-top: 0; border-top: 1px solid var(--line); }
+
+    /* rankings */
+    .rank { display: flex; flex-direction: column; gap: 8px; }
+    .rank__row {
+      display: grid;
+      grid-template-columns: 26px 10px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 6px 8px;
+      border: 1px solid transparent;
+      transition: all .15s;
+    }
+    .rank__row:hover { border-color: var(--line); background: rgba(34,211,238,.03); }
+    .rank__pos { font-size: 11px; color: var(--text-faint); }
+    .rank__dot { width: 8px; height: 8px; border-radius: 50%; }
+    .rank__name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .rank__meta { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; }
+    .rank__bar { margin-top: 5px; height: 2px; background: rgba(34,211,238,.1); overflow: hidden; }
+    .rank__bar span { display: block; height: 100%; transition: width .6s ease; box-shadow: 0 0 6px currentColor; }
+    .rank__score { font-size: 14px; color: var(--cyan); }
+
+    /* members */
+    .member { padding: 8px 0; border-bottom: 1px dashed var(--line); }
     .member:last-child { border-bottom: 0; }
-    .member__name { font-weight: 600; font-size: 13px; color: var(--text); }
-    .member__meta { display: flex; gap: 4px; }
-    .member__bar { grid-column: 1 / -1; background: var(--input-bg); height: 3px; border-radius: 2px; overflow: hidden; }
-    .member__bar span { display: block; height: 100%; background: var(--amber); }
-    .pis { display: flex; flex-direction: column; gap: 6px; }
-    .pis__row { display: flex; align-items: center; gap: 8px; }
-    .pis__bar { background: var(--input-bg); height: 6px; border-radius: 3px; overflow: hidden; }
-    .pis__bar span { display: block; height: 100%; background: var(--amber); }
-    .pis__meta { font-size: 11px; color: var(--text-muted); }
-    .pis__area { display: grid; grid-template-columns: 90px 1fr 36px; gap: 8px; align-items: center; font-size: 11px; color: var(--text-muted); }
-    .pis__area-bar { background: var(--input-bg); height: 4px; border-radius: 2px; overflow: hidden; }
-    .pis__area-bar span { display: block; height: 100%; background: #6d28d9; }
-    .pis__area-pct { font-family: 'JetBrains Mono', monospace; text-align: right; }
-    .roi { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-    .roi__cell { background: var(--input-bg); padding: 10px; border-radius: 8px; text-align: center; }
-    .roi__cell--full { grid-column: 1 / -1; text-align: left; }
-    .roi__num { font-size: 20px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--text); }
-    .roi__lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 600; }
-    .roi__sub { font-size: 12px; color: var(--text); margin-top: 2px; }
-    .feed { display: grid; grid-template-columns: 12px 1fr auto auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
-    .feed:last-child { border-bottom: 0; }
+    .member__row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+    .member__row--meta { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+    .member__name { color: var(--text); font-weight: 600; }
+    .member__bar { margin-top: 6px; height: 2px; background: rgba(34,211,238,.1); overflow: hidden; }
+    .member__bar span { display: block; height: 100%; background: var(--amber); box-shadow: 0 0 6px var(--amber); transition: width .6s ease; }
+
+    /* PIS */
+    .pis { display: flex; flex-direction: column; gap: 10px; }
+    .pis__title { display: flex; gap: 10px; align-items: center; color: var(--cyan); }
+    .pis__progress { display: flex; flex-direction: column; gap: 4px; }
+    .pis__bar { height: 4px; background: rgba(34,211,238,.1); overflow: hidden; }
+    .pis__bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--cyan), var(--amber)); box-shadow: 0 0 8px var(--cyan); transition: width .8s ease; }
+    .pis__meta { font-size: 9px; letter-spacing: 1.5px; color: var(--text-dim); text-transform: uppercase; }
+    .pis__area { display: grid; grid-template-columns: 110px 1fr 32px; gap: 10px; align-items: center; font-size: 10px; padding: 4px 0; }
+    .pis__area-name { color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+    .pis__area-bar { height: 3px; background: rgba(34,211,238,.1); overflow: hidden; }
+    .pis__area-bar span { display: block; height: 100%; background: var(--cyan-deep); box-shadow: 0 0 6px var(--cyan); transition: width .6s ease; }
+    .pis__area-pct { text-align: right; font-size: 11px; }
+
+    /* ROI radar */
+    .roi-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: center; }
+    @media (max-width: 1400px) { .roi-wrap { grid-template-columns: 1fr; } }
+    .radar { width: 100%; height: auto; max-height: 220px; }
+    .radar__lbl {
+      font-family: 'Orbitron', monospace;
+      font-size: 7px;
+      fill: var(--text-dim);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .roi-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .roi-meta__cell {
+      border: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: center;
+      background: rgba(34,211,238,.03);
+    }
+    .roi-meta__num { font-size: 18px; }
+    .roi-meta__lbl { font-size: 8px; color: var(--text-dim); margin-top: 2px; letter-spacing: 1.5px; }
+
+    /* feed */
+    .feed-body { max-height: 220px; overflow-y: auto; }
+    .feed__row {
+      display: grid;
+      grid-template-columns: 10px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 6px 4px;
+      border-bottom: 1px dashed rgba(34,211,238,.08);
+    }
+    .feed__row:last-child { border-bottom: 0; }
+    .feed__dot { width: 8px; height: 8px; border-radius: 50%; }
     .feed__name { font-size: 12px; font-weight: 600; color: var(--text); }
-    .feed__meta { font-size: 10px; color: var(--text-muted); }
-    .fab { position: fixed; right: 24px; bottom: 24px; background: var(--amber); color: #fff; border: 0; padding: 14px 22px; border-radius: 999px; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.2); z-index: 60; }
-    .fab:hover { transform: translateY(-1px); }
-    .modal { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: grid; place-items: center; z-index: 100; }
-    .modal__box { background: var(--card-bg); padding: 22px; border-radius: 12px; width: min(440px, 92vw); display: flex; flex-direction: column; gap: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
-    .modal__box h3 { margin: 0; }
-    .modal__box label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-    .modal__box input, .modal__box select { padding: 8px 10px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: inherit; }
-    .row { display: flex; gap: 8px; }
-    .row label { flex: 1; }
-    .row--end { justify-content: flex-end; }
-    .btn { padding: 8px 14px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; }
-    .btn--primary { background: var(--amber); border-color: var(--amber); color: #fff; }
-    .btn--primary:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn--ghost { background: transparent; }
-    .toast { position: fixed; bottom: 90px; right: 24px; background: var(--text); color: var(--card-bg); padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 200; box-shadow: 0 8px 20px rgba(0,0,0,.3); }
+    .feed__meta { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; }
+
+    /* empty */
+    .empty {
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--text-faint);
+      text-align: center;
+      padding: 14px 0;
+    }
+
+    /* ticker */
+    .ticker {
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: rgba(0,0,0,.4);
+      overflow: hidden;
+      height: 22px;
+      display: flex;
+      align-items: center;
+    }
+    .ticker__track {
+      display: flex;
+      gap: 80px;
+      white-space: nowrap;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--cyan-soft);
+      animation: ticker-roll 60s linear infinite;
+    }
+    @keyframes ticker-roll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* FAB */
+    .fab {
+      position: fixed;
+      right: 30px;
+      bottom: 40px;
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 22px;
+      background: linear-gradient(135deg, rgba(245,158,11,.18), rgba(245,158,11,.04));
+      border: 1px solid var(--amber);
+      color: var(--amber-soft);
+      cursor: pointer;
+      z-index: 70;
+      box-shadow: var(--glow-amber);
+      animation: glow-pulse-amber 3s ease-in-out infinite;
+    }
+    @keyframes glow-pulse-amber {
+      0%, 100% { box-shadow: 0 0 12px rgba(245,158,11,.4), 0 0 32px rgba(245,158,11,.2); }
+      50%      { box-shadow: 0 0 18px rgba(245,158,11,.7), 0 0 48px rgba(245,158,11,.3); }
+    }
+    .fab:hover { transform: translateY(-2px); background: linear-gradient(135deg, rgba(245,158,11,.3), rgba(245,158,11,.1)); }
+    .fab__plus { font-size: 18px; font-weight: 700; }
+    .fab__label { font-size: 11px; }
+    .fab.arc-frame::before, .fab.arc-frame::after { border-color: var(--amber); }
+
+    /* modal */
+    .modal {
+      position: fixed; inset: 0;
+      background: rgba(3, 6, 14, .85);
+      backdrop-filter: blur(8px);
+      display: grid; place-items: center;
+      z-index: 200;
+      animation: iris-in .25s ease;
+    }
+    @keyframes iris-in {
+      from { opacity: 0; backdrop-filter: blur(0); }
+      to   { opacity: 1; }
+    }
+    .modal__box {
+      background: var(--panel-solid);
+      border: 1px solid var(--line-strong);
+      padding: 26px;
+      width: min(460px, 92vw);
+      display: flex; flex-direction: column; gap: 14px;
+      box-shadow: var(--glow-cyan);
+      animation: box-in .35s cubic-bezier(.2,.7,.2,1);
+    }
+    @keyframes box-in {
+      from { opacity: 0; transform: translateY(20px) scale(.96); }
+      to   { opacity: 1; transform: translateY(0)    scale(1); }
+    }
+    .modal__title { margin: 0 0 4px; font-size: 14px; color: var(--cyan); }
+    .modal__row { display: flex; gap: 10px; }
+    .modal__row .cmd-field { flex: 1; }
+    .modal__row--end { justify-content: flex-end; }
+
+    /* toast */
+    .toast {
+      position: fixed;
+      bottom: 110px; right: 30px;
+      padding: 10px 18px;
+      background: var(--panel-solid);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      display: flex; gap: 10px; align-items: center;
+      z-index: 250;
+      box-shadow: var(--glow-cyan);
+      animation: toast-in .3s ease;
+    }
+    .toast__dot { width: 8px; height: 8px; background: var(--cyan); box-shadow: var(--glow-cyan); animation: pulse-soft 1s infinite; }
+    @keyframes toast-in { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
   `]
 })
 export class JarvisDashboardComponent {
@@ -300,6 +523,20 @@ export class JarvisDashboardComponent {
   form: LogForm = { agentId: '', outcome: 'success', findingCount: 3, actioned: 2, dismissed: 1 };
   pisDraft = { ...this.svc.pisState() };
 
+  radarRings = [0.25, 0.5, 0.75, 1];
+
+  gauges = computed(() => {
+    const m = this.svc.sprintMetrics();
+    const wk = this.svc.weeklyInvocations();
+    return [
+      { label: 'WEEKLY OPS', value: wk,                              unit: 'RUNS',  sub: 'LAST 7D',    pct: Math.min(100, wk * 10),                       color: '#22d3ee' },
+      { label: 'TIME SAVED', value: this.svc.totalTimeSavedHours(),  unit: 'HOURS', sub: 'ALL TIME',   pct: Math.min(100, this.svc.totalTimeSavedHours()),color: '#22d3ee' },
+      { label: 'PREVENTED',  value: this.svc.totalPrevented(),       unit: 'FINDINGS', sub: 'ACTIONED',pct: Math.min(100, this.svc.totalPrevented() * 5), color: '#f59e0b' },
+      { label: 'ADOPTION',   value: this.svc.adoptionRate(),         unit: '%',     sub: `${this.svc.activeUsers()}/${this.svc.teamSize()} ACTIVE`, pct: this.svc.adoptionRate(),  color: '#34d399' },
+      { label: 'TOTAL OPS',  value: this.svc.totalInvocations(),     unit: 'RUNS',  sub: 'CUMULATIVE', pct: Math.min(100, this.svc.totalInvocations() * 2), color: '#67e8f9' }
+    ];
+  });
+
   rankings = computed(() => {
     const metrics = this.svc.agentMetrics();
     return this.svc.agents()
@@ -308,10 +545,8 @@ export class JarvisDashboardComponent {
         const g = this.svc.getGroup(a.group);
         const healthPct = Math.min(100, m.runs * 8 + m.actionRate / 2);
         return {
-          id: a.id,
-          name: a.name,
-          domain: a.group,
-          accent: g?.accent ?? '#666',
+          id: a.id, name: a.name, domain: a.group,
+          accent: g?.accent ?? '#22d3ee',
           runs: m.runs,
           timeHr: Math.round(m.timeSavedMin / 60 * 10) / 10,
           healthPct: Math.round(healthPct)
@@ -324,10 +559,74 @@ export class JarvisDashboardComponent {
 
   recentFeed = computed<InvocationLog[]>(() => this.svc.logs().slice(0, 8));
 
+  tickerText = computed(() => {
+    const m = this.svc.sprintMetrics();
+    const wk = this.svc.weeklyInvocations();
+    if (this.svc.totalInvocations() === 0) {
+      return 'ARC-OS ONLINE · AWAITING TELEMETRY · LOG YOUR FIRST OPERATION VIA THE LOG OP CONSOLE';
+    }
+    return `SPRINT ${this.svc.currentSprint()} · ${m.runs} OPS · ${m.timeSavedHours}H SAVED · ${m.prevented} PREVENTED · ${wk} OPS THIS WEEK · ${this.svc.adoptionRate()}% SQUAD ADOPTION`;
+  });
+
+  // --- radar geometry ---
+  private get radarAxes() {
+    const m = this.svc.sprintMetrics();
+    const all = this.svc;
+    return [
+      { label: 'OPS',       value: Math.min(1, m.runs / 30) },
+      { label: 'TIME',      value: Math.min(1, m.timeSavedHours / 40) },
+      { label: 'PREVENTED', value: Math.min(1, m.prevented / 25) },
+      { label: 'ACT RATE',  value: m.actionRate / 100 },
+      { label: 'SQUAD',     value: all.adoptionRate() / 100 },
+      { label: 'BREADTH',   value: Math.min(1, all.teamStats().reduce((s, t) => s + t.uniqueAgents, 0) / 40) }
+    ];
+  }
+
+  radarPoints(scale = 1): string {
+    const cx = 120, cy = 100, r = 70 * scale;
+    return this.radarAxes.map((_, i, arr) => {
+      const a = (Math.PI * 2 * i / arr.length) - Math.PI / 2;
+      return `${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`;
+    }).join(' ');
+  }
+
+  radarDataPoints(): string {
+    const cx = 120, cy = 100, rMax = 70;
+    return this.radarAxes.map((ax, i, arr) => {
+      const a = (Math.PI * 2 * i / arr.length) - Math.PI / 2;
+      const r = rMax * Math.max(0.05, ax.value);
+      return `${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`;
+    }).join(' ');
+  }
+
+  radarDataVertices(): { x: number; y: number }[] {
+    const cx = 120, cy = 100, rMax = 70;
+    return this.radarAxes.map((ax, i, arr) => {
+      const a = (Math.PI * 2 * i / arr.length) - Math.PI / 2;
+      const r = rMax * Math.max(0.05, ax.value);
+      return { x: +(cx + r * Math.cos(a)).toFixed(1), y: +(cy + r * Math.sin(a)).toFixed(1) };
+    });
+  }
+
+  radarLabels(): { x: number; y: number; text: string }[] {
+    const cx = 120, cy = 100, r = 88;
+    return this.radarAxes.map((ax, i, arr) => {
+      const a = (Math.PI * 2 * i / arr.length) - Math.PI / 2;
+      return { x: +(cx + r * Math.cos(a)).toFixed(1), y: +(cy + r * Math.sin(a) + 3).toFixed(1), text: ax.label };
+    });
+  }
+
+  outcomeChip(o: InvocationLog['outcome']): string {
+    return o === 'success' ? 'arc-chip arc-chip--green'
+         : o === 'partial' ? 'arc-chip arc-chip--amber'
+         : o === 'noissue' ? 'arc-chip'
+                           : 'arc-chip arc-chip--red';
+  }
+
   submitLog(): void {
     const entry = this.svc.logInvocation(this.form);
     if (entry) {
-      this.flash(`Logged ${entry.agentName}`);
+      this.flash(`OPERATION LOGGED · ${entry.agentName.toUpperCase()}`);
       this.form = { agentId: '', outcome: 'success', findingCount: 3, actioned: 2, dismissed: 1 };
       this.logOpen.set(false);
     }
@@ -335,23 +634,22 @@ export class JarvisDashboardComponent {
 
   submitPis(): void {
     this.svc.updatePisState(this.pisDraft);
-    this.flash('PIS updated');
+    this.flash('PIS SYNCHRONISED');
     this.pisOpen.set(false);
   }
 
   relTime(ts: number): string {
     const diff = Date.now() - ts;
     const m = Math.floor(diff / 60000);
-    if (m < 1) return 'just now';
-    if (m < 60) return `${m}m ago`;
+    if (m < 1) return 'JUST NOW';
+    if (m < 60) return `T-${m}M`;
     const h = Math.floor(m / 60);
-    if (h < 24) return `${h}h ago`;
-    const d = Math.floor(h / 24);
-    return `${d}d ago`;
+    if (h < 24) return `T-${h}H`;
+    return `T-${Math.floor(h / 24)}D`;
   }
 
   private flash(msg: string): void {
     this.toast.set(msg);
-    setTimeout(() => this.toast.set(''), 1800);
+    setTimeout(() => this.toast.set(''), 2200);
   }
 }

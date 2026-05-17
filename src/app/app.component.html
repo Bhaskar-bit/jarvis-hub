@@ -1,29 +1,47 @@
-<app-top-bar></app-top-bar>
+<!-- Boot sequence -->
+<app-boot-sequence *ngIf="!booted()" (done)="onBootDone()"></app-boot-sequence>
 
-<main *ngIf="svc.activeView() === 'agents'">
-  <app-agent-group
-    *ngFor="let g of svc.getGroupsForFiltered()"
-    [group]="g"
-    [agents]="svc.getAgentsForGroup(g.name)">
-  </app-agent-group>
+<!-- Atmospheric layers -->
+<div class="arc-grid"
+     [style.transform]="'translate(' + parallaxX() + 'px,' + parallaxY() + 'px)'"></div>
+<div class="arc-letterbox arc-letterbox--top"></div>
+<div class="arc-letterbox arc-letterbox--bottom"></div>
 
-  <p *ngIf="svc.filteredAgents().length === 0" class="empty-state">
-    No agents match the current filter.
-  </p>
+<!-- Main shell — gated until boot done -->
+<ng-container *ngIf="booted()">
+  <app-top-bar></app-top-bar>
 
-  <section class="recent" *ngIf="recentRuns().length > 0">
-    <h3>Recent activity</h3>
-    <ul>
-      <li *ngFor="let r of recentRuns()">
-        <strong>{{ r.name }}</strong>
-        <span class="muted">— {{ r.group }}</span>
-      </li>
-    </ul>
-  </section>
-</main>
+  <main *ngIf="svc.activeView() === 'agents'" class="agents-view">
+    <app-agent-group
+      *ngFor="let g of svc.getGroupsForFiltered()"
+      [group]="g"
+      [agents]="svc.getAgentsForGroup(g.name)">
+    </app-agent-group>
 
-<app-jarvis-dashboard *ngIf="svc.activeView() === 'jarvis'"></app-jarvis-dashboard>
+    <p *ngIf="svc.filteredAgents().length === 0" class="empty arc-title">
+      ✗ NO AGENTS · CHECK FILTERS
+    </p>
 
-<footer class="foot">
-  Launch any agent with its <code>/trigger</code> in Claude Code.
-</footer>
+    <section class="recent" *ngIf="recentRuns().length > 0">
+      <header class="recent__hdr">
+        <span class="recent__bar"></span>
+        <h3 class="arc-title">RECENT TELEMETRY</h3>
+        <span class="recent__line"></span>
+      </header>
+      <ul>
+        <li *ngFor="let r of recentRuns()">
+          <span class="dot"></span>
+          <strong>{{ r.name }}</strong>
+          <span class="muted arc-mono">{{ r.group.toUpperCase() }}</span>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <app-jarvis-dashboard *ngIf="svc.activeView() === 'jarvis'"></app-jarvis-dashboard>
+
+  <footer class="foot arc-mono">
+    <span class="dot dot--green"></span>
+    ARC-OS · TYPE <code>/trigger</code> IN CLAUDE CODE TO LAUNCH ANY AGENT
+  </footer>
+</ng-container>

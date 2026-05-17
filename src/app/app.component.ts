@@ -1,19 +1,24 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AgentsService } from './services/agents.service';
 import { TopBarComponent } from './components/top-bar/top-bar.component';
 import { AgentGroupComponent } from './components/agent-group/agent-group.component';
 import { JarvisDashboardComponent } from './components/jarvis-dashboard/jarvis-dashboard.component';
+import { BootSequenceComponent } from './components/boot-sequence/boot-sequence.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, TopBarComponent, AgentGroupComponent, JarvisDashboardComponent],
+  imports: [CommonModule, TopBarComponent, AgentGroupComponent, JarvisDashboardComponent, BootSequenceComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
   svc = inject(AgentsService);
+
+  booted = signal(false);
+  parallaxX = signal(0);
+  parallaxY = signal(0);
 
   recentRuns = computed(() => {
     const map = new Map<string, number>();
@@ -29,4 +34,23 @@ export class AppComponent {
       })
       .filter((x): x is { name: string; group: string; ts: number } => x !== null);
   });
+
+  constructor() {
+    if (sessionStorage.getItem('arc-booted') === '1') {
+      this.booted.set(true);
+    }
+  }
+
+  onBootDone(): void {
+    this.booted.set(true);
+    sessionStorage.setItem('arc-booted', '1');
+  }
+
+  @HostListener('window:mousemove', ['$event'])
+  onMouseMove(e: MouseEvent): void {
+    const x = (e.clientX / window.innerWidth - 0.5) * 8;
+    const y = (e.clientY / window.innerHeight - 0.5) * 8;
+    this.parallaxX.set(x);
+    this.parallaxY.set(y);
+  }
 }

@@ -9,136 +9,234 @@ import { AgentsService } from '../../services/agents.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-  <article class="card" [attr.data-testid]="'agent-card-' + agent.id">
-    <span class="card__bar" [style.background]="'linear-gradient(90deg,' + group.accent + ',' + group.accent + 'cc)'"></span>
+  <article class="mod arc-frame--4"
+           [class.mod--loaded]="agent.loadStatus === 'loaded'"
+           [class.mod--loading]="agent.loadStatus === 'loading'"
+           [class.mod--error]="agent.loadStatus === 'error'"
+           [attr.data-testid]="'agent-card-' + agent.id">
+    <span class="arc-frame-corner"></span><span class="arc-frame-corner"></span>
+    <span class="arc-frame-corner"></span><span class="arc-frame-corner"></span>
 
-    <header class="card__head">
-      <span class="status-dot" [class]="'status-dot--' + agent.loadStatus"></span>
-      <span class="card__icon"
-            [style.background]="theme() === 'dark' ? group.darkBg : group.lightBg"
-            [style.color]="group.accent"
-            [style.border-color]="theme() === 'dark' ? group.darkBorder : group.lightBorder">
-        {{ agent.icon }}
-      </span>
-      <div class="card__title">
-        <div class="card__name">{{ agent.name }}</div>
-        <div class="card__meta">
-          <span *ngIf="agent.badge" class="badge" [class]="'badge--' + agent.badge">
-            {{ agent.badge }}
+    <!-- accent strip -->
+    <span class="mod__strip" [style.background]="group.accent" [style.box-shadow]="'0 0 8px ' + group.accent"></span>
+
+    <!-- head -->
+    <header class="mod__head">
+      <div class="mod__icon-wrap">
+        <svg viewBox="0 0 50 50" class="mod__rings" *ngIf="agent.loadStatus === 'loading'">
+          <circle cx="25" cy="25" r="22" fill="none" stroke="#22d3ee" stroke-width="1" stroke-dasharray="6 6" class="ring1"/>
+        </svg>
+        <span class="mod__icon"
+              [style.background]="'linear-gradient(135deg,' + group.accent + '20,' + group.accent + '08)'"
+              [style.color]="group.accent"
+              [style.border-color]="group.accent">
+          {{ agent.icon }}
+        </span>
+        <span class="mod__status" [class]="'mod__status--' + agent.loadStatus"></span>
+      </div>
+
+      <div class="mod__title">
+        <div class="mod__name">{{ agent.name }}</div>
+        <div class="mod__meta arc-mono">
+          <span *ngIf="agent.badge" class="mod__badge" [class]="'mod__badge--' + agent.badge"
+                [style.color]="agent.badge === 'orchestrator' ? '#f59e0b' : '#22d3ee'">
+            ◆ {{ agent.badge.toUpperCase() }}
           </span>
-          <span class="card__ver">{{ agent.version }}</span>
-          <span *ngIf="svc.getOverallScore(agent) > 0" class="card__score">
-            · {{ svc.getOverallScore(agent) }}/10
-          </span>
+          <span class="mod__ver">{{ agent.version.toUpperCase() }}</span>
+          <span *ngIf="svc.getOverallScore(agent) > 0" class="mod__score">· {{ svc.getOverallScore(agent) }}/10</span>
         </div>
       </div>
-      <div class="card__biz" *ngIf="svc.getBizScore(agent) > 0" [style.color]="group.accent">
+
+      <div class="mod__biz arc-data" *ngIf="svc.getBizScore(agent) > 0" [style.color]="group.accent">
         {{ svc.getBizScore(agent) }}
       </div>
     </header>
 
-    <p *ngIf="agent.badge === 'orchestrator'" class="rel rel--orch">⚡ Orchestrates specialist sub-agents</p>
-    <p *ngIf="agent.badge === 'specialist'" class="rel rel--spec">🔗 Invoked by orchestrator</p>
+    <!-- relationship note -->
+    <p *ngIf="agent.badge === 'orchestrator'" class="mod__rel mod__rel--orch arc-mono">⚡ ORCHESTRATES SUB-AGENTS</p>
+    <p *ngIf="agent.badge === 'specialist'"    class="mod__rel mod__rel--spec arc-mono">↳ INVOKED BY ORCHESTRATOR</p>
 
-    <p class="card__what">{{ agent.what }}</p>
+    <!-- description -->
+    <p class="mod__what">{{ agent.what }}</p>
 
-    <div class="card__biz-box"
-         [style.background]="theme() === 'dark' ? group.darkBg : group.lightBg"
-         [style.border-color]="theme() === 'dark' ? group.darkBorder : group.lightBorder">
-      <strong>Business value:</strong> {{ agent.businessValue }}
+    <!-- value box -->
+    <div class="mod__val">
+      <div class="mod__val-lbl arc-title" [style.color]="group.accent">▸ VALUE</div>
+      <div class="mod__val-txt">{{ agent.businessValue }}</div>
     </div>
 
-    <div class="card__runs" *ngIf="svc.getRunCount(agent.id) > 0">
-      ▶ {{ svc.getRunCount(agent.id) }} run{{ svc.getRunCount(agent.id) === 1 ? '' : 's' }}
+    <!-- run count -->
+    <div class="mod__ops arc-mono" *ngIf="svc.getRunCount(agent.id) > 0">
+      ▶ {{ svc.getRunCount(agent.id) }} OPS LOGGED
     </div>
 
-    <div class="card__actions">
-      <button class="btn btn--primary"
-              [class.btn--ok]="copied()"
+    <!-- actions -->
+    <div class="mod__actions">
+      <button class="arc-btn arc-btn--sm mod__primary"
+              [class.arc-btn--amber]="!copied()"
+              [class.mod__primary--ok]="copied()"
               (click)="copyTrigger()"
               [attr.data-testid]="'copy-' + agent.id">
-        {{ copied() ? '✓ Copied' : 'Copy Trigger' }}
+        {{ copied() ? '✓ COPIED' : '◀ COPY TRIGGER' }}
       </button>
-      <button class="btn btn--icon"
-              [class.btn--ok]="downloaded()"
-              (click)="download()"
-              title="Download"
-              [attr.data-testid]="'download-' + agent.id">⬇</button>
-      <a class="btn btn--icon"
+      <button class="arc-btn arc-btn--sm icon"
+              [class.mod__primary--ok]="downloaded()"
+              (click)="download()" title="Download"
+              [attr.data-testid]="'download-' + agent.id">▼</button>
+      <a class="arc-btn arc-btn--sm icon"
          [href]="'https://github.com/bhaskar-sharma/agentic-universe/blob/master/' + agent.githubPath"
-         target="_blank" rel="noopener" title="GitHub">⎇</a>
-      <button class="btn btn--icon" (click)="toggle()" [title]="expanded() ? 'Collapse' : 'Expand'"
+         target="_blank" rel="noopener" title="Source">⎇</a>
+      <button class="arc-btn arc-btn--sm icon" (click)="toggle()"
               [attr.data-testid]="'expand-' + agent.id">
         {{ expanded() ? '▲' : '▼' }}
       </button>
     </div>
 
-    <div class="drawer" *ngIf="expanded()">
-      <div class="drawer__block">
-        <div class="drawer__label">Trigger</div>
+    <!-- drawer -->
+    <div class="mod__drawer" *ngIf="expanded()">
+      <div class="mod__block">
+        <div class="mod__block-lbl arc-title">▸ TRIGGER</div>
         <pre class="code">{{ agent.trigger }} {{ agent.argHint }}</pre>
       </div>
 
-      <div class="drawer__block">
-        <div class="drawer__label">
-          File preview
-          <span *ngIf="agent.loadStatus === 'loading'" class="muted">loading…</span>
-          <span *ngIf="agent.loadStatus === 'error'" class="err">failed to load</span>
+      <div class="mod__block">
+        <div class="mod__block-lbl arc-title">
+          ▸ MANIFEST
+          <span *ngIf="agent.loadStatus === 'loading'" class="muted">LOADING…</span>
+          <span *ngIf="agent.loadStatus === 'error'" class="err">FAILED</span>
         </div>
-        <pre class="preview">{{ agent.rawContent || 'Expand to load from GitHub.' }}</pre>
+        <pre class="preview">{{ agent.rawContent || 'EXPAND TO LOAD FROM GITHUB.' }}</pre>
       </div>
 
-      <div class="drawer__block">
-        <div class="drawer__label">Evaluator scores</div>
-        <div class="score-row">
-          <label>Overall <input type="number" min="0" max="10" [(ngModel)]="overall" /></label>
-          <label>Biz <input type="number" min="0" max="10" [(ngModel)]="biz" /></label>
-          <button class="btn btn--primary" (click)="saveScores()">Save Scores</button>
+      <div class="mod__block">
+        <div class="mod__block-lbl arc-title">▸ SCORES</div>
+        <div class="mod__score-row">
+          <label class="cmd-field">
+            <span>OVERALL</span>
+            <input class="arc-input" type="number" min="0" max="10" [(ngModel)]="overall"/>
+          </label>
+          <label class="cmd-field">
+            <span>BIZ</span>
+            <input class="arc-input" type="number" min="0" max="10" [(ngModel)]="biz"/>
+          </label>
+          <button class="arc-btn arc-btn--sm" (click)="saveScores()">▶ SAVE</button>
         </div>
       </div>
     </div>
   </article>
   `,
   styles: [`
-    .card { position: relative; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; transition: box-shadow .15s, transform .15s; }
-    .card:hover { box-shadow: var(--shadow-hover); transform: translateY(-1px); }
-    .card__bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 10px 10px 0 0; }
-    .card__head { display: grid; grid-template-columns: auto auto 1fr auto; align-items: center; gap: 10px; padding-top: 4px; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; }
-    .status-dot--loaded { background: #10b981; }
-    .status-dot--loading { background: var(--amber); animation: pulse 1s infinite; }
-    .status-dot--error { background: #ef4444; }
-    .card__icon { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; font-family: 'JetBrains Mono', monospace; border: 1px solid; }
-    .card__name { font-weight: 700; font-size: 14px; color: var(--text); }
-    .card__meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
-    .card__ver { color: var(--text-muted); }
-    .card__score { color: var(--text); }
-    .badge { padding: 1px 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; border-radius: 999px; }
-    .badge--orchestrator { background: rgba(180, 83, 9, .15); color: var(--amber); }
-    .badge--specialist { background: rgba(99, 102, 241, .12); color: #6366f1; }
-    .card__biz { font-size: 22px; font-weight: 800; line-height: 1; font-family: 'JetBrains Mono', monospace; }
-    .rel { margin: 0; font-size: 11px; color: var(--text-muted); }
-    .rel--orch { color: var(--amber); }
-    .card__what { margin: 0; font-size: 13px; color: var(--text); line-height: 1.5; }
-    .card__biz-box { padding: 8px 10px; border-radius: 6px; border: 1px solid; font-size: 12px; color: var(--text); }
-    .card__biz-box strong { display: block; margin-bottom: 2px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
-    .card__runs { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
-    .card__actions { display: flex; gap: 6px; }
-    .btn { padding: 6px 10px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
-    .btn:hover { background: var(--input-bg); }
-    .btn--primary { flex: 1; background: var(--text); color: var(--card-bg); border-color: var(--text); }
-    .btn--icon { width: 30px; padding: 0; }
-    .btn--ok { background: #10b981 !important; border-color: #10b981 !important; color: #fff !important; }
-    .drawer { display: flex; flex-direction: column; gap: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
-    .drawer__label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 4px; display: flex; gap: 8px; align-items: center; }
-    .muted { color: var(--text-faint); text-transform: none; letter-spacing: 0; font-size: 11px; }
-    .err { color: #ef4444; text-transform: none; letter-spacing: 0; font-size: 11px; }
-    .code { background: var(--code-bg); padding: 8px 10px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text); margin: 0; white-space: pre-wrap; }
-    .preview { background: var(--code-bg); padding: 10px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text); margin: 0; max-height: 180px; overflow: auto; white-space: pre-wrap; line-height: 1.4; }
-    .score-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .score-row label { font-size: 11px; color: var(--text-muted); display: inline-flex; gap: 4px; align-items: center; }
-    .score-row input { width: 50px; padding: 4px 6px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: inherit; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .mod {
+      position: relative;
+      background: linear-gradient(180deg, rgba(34,211,238,.04), transparent 50%), var(--panel);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(6px);
+      padding: 14px;
+      display: flex; flex-direction: column; gap: 10px;
+      transition: all .2s;
+    }
+    .mod:hover {
+      border-color: var(--line-strong);
+      box-shadow: var(--shadow-hover), var(--glow-soft);
+      transform: translateY(-2px);
+    }
+    .mod__strip {
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    }
+
+    /* head */
+    .mod__head { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
+    .mod__icon-wrap { position: relative; width: 40px; height: 40px; }
+    .mod__icon {
+      width: 40px; height: 40px;
+      display: grid; place-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 1px;
+      border: 1px solid;
+      position: relative;
+      z-index: 1;
+    }
+    .mod__rings { position: absolute; inset: -5px; width: 50px; height: 50px; pointer-events: none; }
+    .ring1 { transform-origin: center; animation: spin-slow 2s linear infinite; }
+    @keyframes spin-slow { to { transform: rotate(360deg); } }
+
+    .mod__status {
+      position: absolute;
+      bottom: -2px; right: -2px;
+      width: 8px; height: 8px;
+      background: var(--text-faint);
+      border-radius: 50%;
+      z-index: 2;
+    }
+    .mod__status--loaded  { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .mod__status--loading { background: var(--amber); box-shadow: 0 0 8px var(--amber); animation: pulse-soft 1s infinite; }
+    .mod__status--error   { background: var(--red);   box-shadow: 0 0 8px var(--red); }
+    @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+
+    .mod__name { font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: 0.3px; }
+    .mod__meta { font-size: 9px; color: var(--text-dim); margin-top: 3px; display: flex; gap: 6px; align-items: center; letter-spacing: 1px; }
+    .mod__badge { font-size: 8px; letter-spacing: 1.5px; }
+    .mod__ver, .mod__score { color: var(--text-faint); }
+    .mod__biz {
+      font-family: 'Orbitron', monospace;
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1;
+      text-shadow: 0 0 10px currentColor;
+    }
+
+    /* relationship */
+    .mod__rel {
+      margin: 0;
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      color: var(--text-dim);
+    }
+    .mod__rel--orch { color: var(--amber); }
+    .mod__rel--spec { color: var(--cyan-soft); }
+
+    /* description */
+    .mod__what { margin: 0; font-size: 12.5px; color: var(--text); line-height: 1.55; }
+
+    /* value */
+    .mod__val {
+      border-left: 2px solid var(--cyan);
+      padding: 6px 10px;
+      background: rgba(34,211,238,.04);
+    }
+    .mod__val-lbl { font-size: 9px; letter-spacing: 2px; margin-bottom: 2px; }
+    .mod__val-txt { font-size: 11.5px; color: var(--text); line-height: 1.5; }
+
+    .mod__ops { font-size: 9px; color: var(--cyan-soft); letter-spacing: 1.5px; }
+
+    /* actions */
+    .mod__actions { display: flex; gap: 5px; margin-top: auto; }
+    .mod__primary { flex: 1; }
+    .mod__primary--ok { background: rgba(52,211,153,.12) !important; border-color: var(--green) !important; color: var(--green) !important; box-shadow: 0 0 12px rgba(52,211,153,.4); }
+    .icon { width: 32px; padding: 0; }
+
+    /* drawer */
+    .mod__drawer { display: flex; flex-direction: column; gap: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+    .mod__block-lbl { font-size: 9px; letter-spacing: 2px; color: var(--cyan); margin-bottom: 4px; display: flex; gap: 8px; align-items: center; }
+    .muted { color: var(--text-faint); font-size: 9px; letter-spacing: 1px; }
+    .err   { color: var(--red); font-size: 9px; letter-spacing: 1px; }
+    .code, .preview {
+      background: var(--code-bg);
+      padding: 8px 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--cyan-soft);
+      margin: 0;
+      white-space: pre-wrap;
+      border-left: 2px solid var(--line);
+      line-height: 1.5;
+    }
+    .preview { font-size: 10px; max-height: 180px; overflow: auto; color: var(--text-dim); }
+    .mod__score-row { display: flex; gap: 8px; align-items: end; }
+    .mod__score-row .cmd-field { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .mod__score-row .cmd-field span { font-family: 'Orbitron', monospace; font-size: 9px; letter-spacing: 2px; color: var(--text-dim); }
   `]
 })
 export class AgentCardComponent {
@@ -151,8 +249,6 @@ export class AgentCardComponent {
   downloaded = signal(false);
   overall = 0;
   biz = 0;
-
-  theme = this.svc.theme;
 
   ngOnInit() {
     this.overall = this.svc.getOverallScore(this.agent);
