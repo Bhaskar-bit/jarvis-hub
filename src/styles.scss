@@ -146,20 +146,8 @@ body.eclipse::after {
   mix-blend-mode: overlay;
 }
 
-/* Letterbox bars — taller, more cinematic */
-.arc-letterbox {
-  position: fixed;
-  left: 0; right: 0;
-  height: 40px;
-  background: var(--letterbox);
-  pointer-events: none;
-  z-index: 80;
-  &--top    { top: 0; }
-  &--bottom { bottom: 0; }
-}
-
-/* legacy: keep the grid div in template but make it invisible */
-.arc-grid { display: none; }
+/* legacy: hide any leftover atmospheric divs */
+.arc-grid, .arc-letterbox { display: none; }
 
 /* ---- typography ---- */
 .arc-title {

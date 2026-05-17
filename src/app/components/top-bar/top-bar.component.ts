@@ -96,7 +96,7 @@ import { AgentsService } from '../../services/agents.service';
   </header>
   `,
   styles: [`
-    :host { position: sticky; top: 40px; z-index: 75; display: block; }
+    :host { position: sticky; top: 0; z-index: 75; display: block; }
     .hud {
       background: var(--panel);
       border-bottom: 1px solid var(--line);

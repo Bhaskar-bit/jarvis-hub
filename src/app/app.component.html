@@ -1,10 +1,6 @@
 <!-- Boot sequence -->
 <app-boot-sequence *ngIf="!booted()" (done)="onBootDone()"></app-boot-sequence>
 
-<!-- Cinematic letterbox -->
-<div class="arc-letterbox arc-letterbox--top"></div>
-<div class="arc-letterbox arc-letterbox--bottom"></div>
-
 <!-- Main shell — gated until boot done -->
 <ng-container *ngIf="booted()">
   <app-top-bar></app-top-bar>
